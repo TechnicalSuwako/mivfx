@@ -8,6 +8,7 @@
 #include <X11/keysym.h>
 
 #include "format/png.h"
+#include "format/webp.h"
 
 int XErrorHandlerd(Display *d, XErrorEvent *event) {
   char error_text[120];
@@ -30,6 +31,8 @@ XImage* openimg(Display *d, const char *filename) {
 
   if (memcmp(buf, "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A", 8) == 0) { // PNG
     return read_png(d, filename);
+  } else if (memcmp(buf + 8, "WEBP", 4) == 0) { // WEBP
+    return read_webp(d, filename);
   }
 
   fprintf(stderr, "不明なファイル種類。\n");
