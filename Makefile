@@ -3,9 +3,9 @@ VERSION=0.1.0
 # Linux、Haiku、かIllumos = /usr、FreeBSDかOpenBSD = /usr/local、NetBSD = /usr/pkg
 PREFIX=/usr
 CC=cc
-FILES=main.c format/png.c
+FILES=main.c format/png.c format/webp.c
 CFLAGS=-Wall -Wextra -g
-LDFLAGS=-lX11 -lpng
+LDFLAGS=-lX11 -lpng -lwebp
 
 all:
 	${CC} ${CFLAGS} -o ${NAME} ${FILES} ${LDFLAGS}
