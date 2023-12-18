@@ -1,11 +1,11 @@
 NAME=mivfx
-VERSION=0.1.0
+VERSION=0.2.0
 # Linux、Haiku、かIllumos = /usr、FreeBSDかOpenBSD = /usr/local、NetBSD = /usr/pkg
 PREFIX=/usr
 CC=cc
-FILES=main.c format/png.c format/webp.c
+FILES=main.c
 CFLAGS=-Wall -Wextra -g
-LDFLAGS=-lX11 -lpng -lwebp
+LDFLAGS=-lSDL2 -lSDL2_image
 
 all:
 	${CC} ${CFLAGS} -o ${NAME} ${FILES} ${LDFLAGS}

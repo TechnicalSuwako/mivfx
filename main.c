@@ -1,106 +1,137 @@
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
+#include <stdbool.h>
 
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/keysym.h>
-
-#include "format/png.h"
-#include "format/webp.h"
-
-int XErrorHandlerd(Display *d, XErrorEvent *event) {
-  char error_text[120];
-  XGetErrorText(d, event->error_code, error_text, sizeof(error_text));
-  fprintf(stderr, "Xエラー: %s\n", error_text);
-  return 0;
-}
-
-XImage* openimg(Display *d, const char *filename) {
-  FILE *fp;
-  fp = fopen(filename, "rb");
-  if (!fp) {
-    perror("ファイルを開けられません。");
-    return NULL;
-  }
-
-  unsigned char buf[16];
-  fread(buf, 1, 16, fp);
-  fclose(fp);
-
-  if (memcmp(buf, "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A", 8) == 0) { // PNG
-    return read_png(d, filename);
-  } else if (memcmp(buf + 8, "WEBP", 4) == 0) { // WEBP
-    return read_webp(d, filename);
-  }
-
-  fprintf(stderr, "不明なファイル種類。\n");
-  return NULL;
-}
-
-int main(int argc, char **argv) {
-  XSetErrorHandler(XErrorHandlerd);
+int main(int argc, char* argv[]) {
   if (argc < 2) {
     printf("使用方法： %s <画像ファイル>\n", argv[0]);
     return 1;
   }
 
-  Display *d = XOpenDisplay(NULL);
-  if (d == NULL) {
-    fprintf(stderr, "画面を開けられません。\n");
+  SDL_Window* window = NULL;
+  SDL_Renderer* renderer = NULL;
+  SDL_Texture* texture = NULL;
+
+  // SDL2とSDL2_imageの初期設定
+  if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+    printf("SDLを初期設定出来なかった：%s\n", SDL_GetError());
     return 1;
   }
 
-  int scr = DefaultScreen(d);
-  Window w = XCreateSimpleWindow(d, RootWindow(d, scr), 0, 0, 500, 500, 1, BlackPixel(d, scr), WhitePixel(d, scr));
-  XSelectInput(d, w, ExposureMask | KeyPressMask);
-  XMapWindow(d, w);
-  XFlush(d);
-
-  GC gc = XCreateGC(d, w, 0, NULL);
-  if (gc == NULL) {
-    fprintf(stderr, "グラフィックス内容を創作に失敗しました。\n");
+  if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
+    printf("SDL_imageを初期設定出来なかった：%s\n", SDL_GetError());
+    SDL_Quit();
     return 1;
   }
 
-  XImage *ximg = openimg(d, argv[1]);
-  if (ximg == NULL) {
-    fprintf(stderr, "画像を開けられません： %s\n", argv[1]);
-    XFreeGC(d, gc);
-    XCloseDisplay(d);
+  // 画像の読込
+  SDL_Surface* imgsurface = IMG_Load(argv[1]);
+  if (imgsurface == NULL) {
+    printf("画像の読込に失敗：%s\n", IMG_GetError());
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
     return 1;
   }
 
-  double scale = 1.0;
+  // 画像の大きさの受取
+  int imgWidth = imgsurface->w;
+  int imgHeight = imgsurface->h;
+  /* float aspectRatio = (float)imgWidth / imgHeight; */
 
-  while (1) {
-    XEvent e;
-    XNextEvent(d, &e);
+  // 画面の大きさの受取
+  SDL_DisplayMode DM;
+  SDL_GetCurrentDisplayMode(0, &DM);
+  int screenWidth = DM.w;
+  int screenHeight = DM.h;
 
-    if (e.type == Expose) {
-      int nw = (int)(ximg->width * scale);
-      int nh = (int)(ximg->height * scale);
-      XPutImage(d, w, gc, ximg, 0, 0, 0, 0, nw, nh);
-    }
+  // 画像は50x50以下じゃ駄目
+  int minWidth = 50;
+  int minHeight = 50;
+  if (imgWidth < minWidth) imgWidth = minWidth;
+  if (imgHeight < minHeight) imgHeight = minHeight;
 
-    if (e.type == KeyPress) {
-      XWindowAttributes attrs;
-      XGetWindowAttributes(d, w, &attrs);
+  // ウィンドウの大きさの設定
+  int windowWidth = (imgWidth > screenWidth) ? screenWidth : imgWidth;
+  int windowHeight = (imgHeight > screenHeight) ? screenHeight : imgHeight;
 
-      KeySym keysym = XLookupKeysym(&e.xkey, 0);
+  // ウィンドウの作成
+  SDL_SetHint(SDL_HINT_VIDEO_WINDOW_SHARE_PIXEL_FORMAT, "1");
+  window = SDL_CreateWindow("mivfx", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, windowWidth, windowHeight, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+  if (window == NULL) {
+    printf("ウィンドウの作成に失敗：%s\n", SDL_GetError());
+    SDL_Quit();
+    return 1;
+  }
 
-      if (keysym == XK_q) {
-        break;
+  // レンダーの作成
+  renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+  if (renderer == NULL) {
+    printf("レンダーの作成に失敗：%s\n", SDL_GetError());
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+    return 1;
+  }
+
+  texture = SDL_CreateTextureFromSurface(renderer, imgsurface);
+  SDL_FreeSurface(imgsurface);
+  if (texture == NULL) {
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+    return 1;
+  }
+
+  // メインループ
+  SDL_Event e;
+  bool quit = false;
+  while (!quit) {
+    // イベント
+    while (SDL_PollEvent(&e) != 0) {
+      if (e.type == SDL_QUIT) {
+        quit = true;
+      } else if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_RESIZED) {
+        // ウィンドウのサイズが変わった場合
+        int newWidth = e.window.data1;
+        int newHeight = e.window.data2;
+
+        // 縦横比を変わらずに新しい大きさの算数
+        /* float newAspectRatio = (float)newWidth / newHeight; */
+        int scaledWidth, scaledHeight;
+        /* if (newAspectRatio > aspectRatio) { */
+        // 画像よりウィンドウの方が広い場合
+        scaledHeight = newHeight;
+        scaledWidth = newWidth;
+        //= (int)(scaledHeight * aspectRatio);
+        /* } else { */
+        /*   // 画像よりウィンドウの方が高い場合 */
+        /*   scaledWidth = newWidth; */
+        /*   scaledHeight = (int)(scaledWidth / aspectRatio); */
+        /* } */
+
+        // テキスチャーのれんダーリングサイズの設定
+        SDL_Rect renderQuad = { (newWidth - scaledWidth) / 2, (newHeight - scaledHeight) / 2, scaledWidth, scaledHeight };
+        SDL_RenderCopy(renderer, texture, NULL, &renderQuad);
       }
     }
+
+    // 画面の更新
+    SDL_RenderClear(renderer);
+
+    // テキスチャーの表示
+    SDL_RenderCopy(renderer, texture, NULL, NULL);
+
+    // 画面の更新
+    SDL_RenderPresent(renderer);
   }
 
   // 掃除
-  XFreeGC(d, gc);
-  XDestroyImage(ximg);
-  XDestroyWindow(d, w);
-  XCloseDisplay(d);
+  SDL_DestroyTexture(texture);
+  SDL_DestroyRenderer(renderer);
+  SDL_DestroyWindow(window);
+  IMG_Quit();
+  SDL_Quit();
 
   return 0;
 }
