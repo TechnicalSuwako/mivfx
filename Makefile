@@ -1,5 +1,5 @@
 NAME=mivfx
-VERSION=0.2.0
+VERSION=0.3.0
 # Linux、Haiku、かIllumos = /usr、FreeBSDかOpenBSD = /usr/local、NetBSD = /usr/pkg
 PREFIX=/usr
 CC=cc
