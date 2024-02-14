@@ -2,6 +2,7 @@
 #include <SDL2/SDL_image.h>
 #include <stdio.h>
 #include <stdbool.h>
+#define DELAY_MS 50
 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
@@ -113,17 +114,22 @@ int main(int argc, char* argv[]) {
         // テキスチャーのれんダーリングサイズの設定
         SDL_Rect renderQuad = { (newWidth - scaledWidth) / 2, (newHeight - scaledHeight) / 2, scaledWidth, scaledHeight };
         SDL_RenderCopy(renderer, texture, NULL, &renderQuad);
+      } else if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_EXPOSED) {
+        // 再描画が必要な場合
+
+        // 画面の更新
+        SDL_RenderClear(renderer);
+
+        // テキスチャーの表示
+        SDL_RenderCopy(renderer, texture, NULL, NULL);
+
+        // 画面の更新
+        SDL_RenderPresent(renderer);
       }
     }
 
-    // 画面の更新
-    SDL_RenderClear(renderer);
-
-    // テキスチャーの表示
-    SDL_RenderCopy(renderer, texture, NULL, NULL);
-
-    // 画面の更新
-    SDL_RenderPresent(renderer);
+    // 休ませる
+    SDL_Delay(DELAY_MS);
   }
 
   // 掃除
