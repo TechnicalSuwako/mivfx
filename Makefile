@@ -15,6 +15,13 @@ all:
 clean:
 	rm -f ${NAME}
 
+dist: clean
+	mkdir -p ${NAME}-${VERSION}
+	cp -R LICENSE.txt Makefile README.md CHANGELOG.md\
+		*.c ${NAME}-${VERSION}
+	tar zcfv ${NAME}-${VERSION}.tar.gz ${NAME}-${VERSION}
+	rm -rf ${NAME}-${VERSION}
+
 install: all
 	mkdir -p ${DESTDIR}${PREFIX}/bin
 	cp -f ${NAME} ${DESTDIR}${PREFIX}/bin
