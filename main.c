@@ -2,17 +2,83 @@
 #include <SDL2/SDL_image.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <curl/curl.h>
+
 #define DELAY_MS 50
+
+SDL_Window* window = NULL;
+SDL_Renderer* renderer = NULL;
+SDL_Texture* texture = NULL;
+bool quit = false;
+
+bool dlfile(const char* url, const char* filename) {
+  CURL* curl = curl_easy_init();
+  if (!curl) {
+    return false;
+  }
+
+  FILE* file = fopen(filename, "wb");
+  if (!file) {
+    return false;
+  }
+
+  curl_easy_setopt(curl, CURLOPT_URL, url);
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
+  CURLcode res = curl_easy_perform(curl);
+  fclose(file);
+
+  if (res != CURLE_OK) {
+    remove(filename);
+    return false;
+  }
+
+  return true;
+}
+
+void windowevent(SDL_Event e) {
+  if (e.type == SDL_QUIT) {
+    quit = true;
+  } else if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_RESIZED) {
+    // ウィンドウのサイズが変わった場合
+    int newWidth = e.window.data1;
+    int newHeight = e.window.data2;
+
+    // 縦横比を変わらずに新しい大きさの算数
+    /* float newAspectRatio = (float)newWidth / newHeight; */
+    int scaledWidth, scaledHeight;
+    /* if (newAspectRatio > aspectRatio) { */
+    // 画像よりウィンドウの方が広い場合
+    scaledHeight = newHeight;
+    scaledWidth = newWidth;
+    //= (int)(scaledHeight * aspectRatio);
+    /* } else { */
+    /*   // 画像よりウィンドウの方が高い場合 */
+    /*   scaledWidth = newWidth; */
+    /*   scaledHeight = (int)(scaledWidth / aspectRatio); */
+    /* } */
+
+    // テキスチャーのれんダーリングサイズの設定
+    SDL_Rect renderQuad = { (newWidth - scaledWidth) / 2, (newHeight - scaledHeight) / 2, scaledWidth, scaledHeight };
+    SDL_RenderCopy(renderer, texture, NULL, &renderQuad);
+  } else if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_EXPOSED) {
+    // 再描画が必要な場合
+
+    // 画面の更新
+    SDL_RenderClear(renderer);
+
+    // テキスチャーの表示
+    SDL_RenderCopy(renderer, texture, NULL, NULL);
+
+    // 画面の更新
+    SDL_RenderPresent(renderer);
+  }
+}
 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
     printf("使用方法： %s <画像ファイル>\n", argv[0]);
     return 1;
   }
-
-  SDL_Window* window = NULL;
-  SDL_Renderer* renderer = NULL;
-  SDL_Texture* texture = NULL;
 
   // SDL2とSDL2_imageの初期設定
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -26,8 +92,25 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
+  const char* imgfile = argv[1];
+
+  // URLの場合、仮にダウンロードして
+  bool isurl = strncmp(imgfile, "http://",  7) == 0 ||
+               strncmp(imgfile, "https://", 8) == 0;
+  char tmpname[] = "/tmp/netimg.png";
+  if (isurl) {
+    if (!dlfile(imgfile, tmpname)) {
+      printf("画像をダウンロードに失敗。URL: %s\n", imgfile);
+      SDL_DestroyRenderer(renderer);
+      SDL_DestroyWindow(window);
+      SDL_Quit();
+      return 1;
+    }
+    imgfile = tmpname;
+  }
+
   // 画像の読込
-  SDL_Surface* imgsurface = IMG_Load(argv[1]);
+  SDL_Surface* imgsurface = IMG_Load(imgfile);
   if (imgsurface == NULL) {
     printf("画像の読込に失敗：%s\n", IMG_GetError());
     SDL_DestroyRenderer(renderer);
@@ -59,7 +142,14 @@ int main(int argc, char* argv[]) {
 
   // ウィンドウの作成
   SDL_SetHint(SDL_HINT_VIDEO_WINDOW_SHARE_PIXEL_FORMAT, "1");
-  window = SDL_CreateWindow("mivfx", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, windowWidth, windowHeight, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+  window = SDL_CreateWindow(
+    "mivfx",
+    SDL_WINDOWPOS_UNDEFINED,
+    SDL_WINDOWPOS_UNDEFINED,
+    windowWidth,
+    windowHeight,
+    SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE
+  );
   if (window == NULL) {
     printf("ウィンドウの作成に失敗：%s\n", SDL_GetError());
     SDL_Quit();
@@ -86,46 +176,10 @@ int main(int argc, char* argv[]) {
 
   // メインループ
   SDL_Event e;
-  bool quit = false;
   while (!quit) {
     // イベント
     while (SDL_PollEvent(&e) != 0) {
-      if (e.type == SDL_QUIT) {
-        quit = true;
-      } else if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_RESIZED) {
-        // ウィンドウのサイズが変わった場合
-        int newWidth = e.window.data1;
-        int newHeight = e.window.data2;
-
-        // 縦横比を変わらずに新しい大きさの算数
-        /* float newAspectRatio = (float)newWidth / newHeight; */
-        int scaledWidth, scaledHeight;
-        /* if (newAspectRatio > aspectRatio) { */
-        // 画像よりウィンドウの方が広い場合
-        scaledHeight = newHeight;
-        scaledWidth = newWidth;
-        //= (int)(scaledHeight * aspectRatio);
-        /* } else { */
-        /*   // 画像よりウィンドウの方が高い場合 */
-        /*   scaledWidth = newWidth; */
-        /*   scaledHeight = (int)(scaledWidth / aspectRatio); */
-        /* } */
-
-        // テキスチャーのれんダーリングサイズの設定
-        SDL_Rect renderQuad = { (newWidth - scaledWidth) / 2, (newHeight - scaledHeight) / 2, scaledWidth, scaledHeight };
-        SDL_RenderCopy(renderer, texture, NULL, &renderQuad);
-      } else if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_EXPOSED) {
-        // 再描画が必要な場合
-
-        // 画面の更新
-        SDL_RenderClear(renderer);
-
-        // テキスチャーの表示
-        SDL_RenderCopy(renderer, texture, NULL, NULL);
-
-        // 画面の更新
-        SDL_RenderPresent(renderer);
-      }
+      windowevent(e);
     }
 
     // 休ませる
@@ -133,6 +187,9 @@ int main(int argc, char* argv[]) {
   }
 
   // 掃除
+  if (isurl) {
+    remove(tmpname);
+  }
   SDL_DestroyTexture(texture);
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);

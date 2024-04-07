@@ -1,14 +1,16 @@
 NAME=mivfx
-VERSION=0.3.0
+VERSION=0.4.0
 # Linux、Haiku、かIllumos = /usr、FreeBSDかOpenBSD = /usr/local、NetBSD = /usr/pkg
-PREFIX=/usr
+PREFIX=/usr/local
 CC=cc
 FILES=main.c
 CFLAGS=-Wall -Wextra -g
-LDFLAGS=-lSDL2 -lSDL2_image
+LIBS=-lSDL2 -lSDL2_image -lcurl
+LDFLAGS=-L${PREFIX}/lib
+CPPFLAGS=-I${PREFIX}/include
 
 all:
-	${CC} ${CFLAGS} -o ${NAME} ${FILES} ${LDFLAGS}
+	${CC} ${CFLAGS} ${CPPFLAGS} -o ${NAME} ${FILES} ${LDFLAGS} ${LIBS}
 
 clean:
 	rm -f ${NAME}
