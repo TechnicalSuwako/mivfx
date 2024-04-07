@@ -16,6 +16,9 @@ int imgHeight;
 int screenWidth;
 int screenHeight;
 
+const char* sofname = "mivfx";
+const char* version = "0.4.0";
+
 bool dlfile(const char* url, const char* filename) {
   CURL* curl = curl_easy_init();
   if (!curl) {
@@ -91,8 +94,13 @@ void windowevent(SDL_Event e) {
 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
-    printf("使用方法： %s <画像ファイル>\n", argv[0]);
+    printf("使用方法： %s <画像ファイル>\n", sofname);
     return 1;
+  }
+
+  if (strncmp(argv[1], "-v", 2) == 0) {
+    printf("%s-%s\n", sofname, version);
+    return 0;
   }
 
   // SDL2とSDL2_imageの初期設定
@@ -144,7 +152,6 @@ int main(int argc, char* argv[]) {
   SDL_GetCurrentDisplayMode(0, &DM);
   screenWidth = DM.w;
   screenHeight = DM.h;
-  printf("%d, %d, %.2f\n", DM.w, DM.h, aspectRatio);
 
   // ウィンドウの大きさの設定
   int windowWidth = (imgWidth >= (screenWidth-20)) ? screenWidth-20 : imgWidth;
