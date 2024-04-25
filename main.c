@@ -17,7 +17,7 @@ int screenWidth;
 int screenHeight;
 
 const char* sofname = "mivfx";
-const char* version = "0.4.0";
+const char* version = "0.5.0";
 
 bool dlfile(const char* url, const char* filename) {
   CURL* curl = curl_easy_init();
