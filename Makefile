@@ -45,7 +45,7 @@ dist: clean
 	tar zcfv release/src/${NAME}-${VERSION}.tar.gz ${NAME}-${VERSION}
 	rm -rf ${NAME}-${VERSION}
 
-install: all
+install:
 	mkdir -p ${DESTDIR}${PREFIX}/bin
 	cp -f ${NAME} ${DESTDIR}${PREFIX}/bin
 	cp -f ${NAME}.desktop ${DESTDIR}${PREFIX}/share/applications
