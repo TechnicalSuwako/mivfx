@@ -90,30 +90,16 @@ void windowevent(SDL_Event e) {
     // 画像のサイズが変わった場合
     float newWidth = (float)imgWidth * zoom;
     float newHeight = (float)imgHeight * zoom;
-
     float minLimit = 50.0f;
-    float maxLimitW = (screenWidth - 20);
-    float maxLimitH = (screenHeight - 20);
 
     // 画像は50x50以下じゃ駄目
-    if (newWidth < minLimit && newWidth < minLimit) {
+    if (newWidth < minLimit || newHeight < minLimit) {
       newWidth = minLimit;
       newHeight = minLimit;
-    } else if (newWidth < minLimit && newHeight >= minLimit) {
+    } else if (newWidth < minLimit & newHeight >= minLimit) {
       newWidth = minLimit;
     } else if (newWidth >= minLimit && newHeight < minLimit) {
       newHeight = minLimit;
-    }
-
-    // 大きすぎの場合もふざけんな
-    // TODO: 大きすぎの場合は、ズームインを辞める様にして
-    if (newWidth >= maxLimitW && newHeight >= maxLimitH) {
-      newHeight = (screenHeight * aspectRatio) - 20;
-      newWidth = (screenWidth * aspectRatio) - 20;
-    } else if (newWidth >= maxLimitW && newHeight < maxLimitH) {
-      newWidth = (screenWidth * aspectRatio) - 20;
-    } else if (newWidth < maxLimitW && newHeight >= maxLimitH) {
-      newHeight = (screenHeight * aspectRatio) - 20;
     }
 
     // テキスチャーのレンダーリングサイズの設定
@@ -176,18 +162,20 @@ void windowevent(SDL_Event e) {
         (imgWidth >= (screenWidth - 100)) &&
         imgHeight >= (screenHeight - 100)
     ) {
-      imgWidth -= (screenWidth * 3);
-      imgHeight -= (screenHeight * 3);
+      imgWidth = (screenWidth - 100);
+      imgHeight = (screenHeight - 100);
     } else if (
         (imgWidth >= (screenWidth - 100)) &&
         imgHeight <= (screenHeight - 100)
     ) {
-      imgWidth -= (screenWidth * 3);
+      imgWidth = (screenWidth - 100);
+      imgHeight = (imgWidth * aspectRatio);
     } else if (
         (imgWidth <= (screenWidth - 100)) &&
         imgHeight >= (screenHeight - 100)
     ) {
-      imgHeight -= (screenHeight * 3);
+      imgHeight = (screenHeight - 100);
+      imgWidth = (imgHeight * aspectRatio);
     }
 
     SDL_RenderCopy(renderer, texture, NULL, &renderQuad);
