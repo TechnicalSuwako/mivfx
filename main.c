@@ -17,9 +17,13 @@ int screenWidth;
 int screenHeight;
 int init = 0;
 SDL_Rect renderQuad;
+float newWidth;
+float newHeight;
 
 // マウス
-int mouseX, mouseY, drag = 0;
+int mouseX = 10;
+int mouseY = 10;
+int drag = 0;
 
 // ズーム
 float zoom = 1.0f;
@@ -88,11 +92,14 @@ void windowevent(SDL_Event e) {
     }
   } else if (e.type == SDL_MOUSEMOTION) {
     if (drag) {
-      // TODO: 画像サイズを変わらないと、画面が黒くになる
       int newMouseX, newMouseY;
       SDL_GetMouseState(&newMouseX, &newMouseY);
       SDL_RenderClear(renderer);
 
+      if (newWidth == 0.0f) renderQuad.w = imgWidth;
+      else renderQuad.w = (int)newWidth;
+      if (newHeight == 0.0f) renderQuad.h = imgHeight;
+      else renderQuad.h = (int)newHeight;
       renderQuad.x = newMouseX - (renderQuad.w / 2);
       renderQuad.y = newMouseY - (renderQuad.h / 2);
 
@@ -101,7 +108,6 @@ void windowevent(SDL_Event e) {
       SDL_RenderPresent(renderer);
     }
   } else if (e.type == SDL_MOUSEWHEEL) {
-    // TODO: ノートパソコンでおかしくなる
     float zoomSpeed = 0.1f;
     if (e.wheel.y > 0) {
       zoom += zoomSpeed;
@@ -114,8 +120,8 @@ void windowevent(SDL_Event e) {
     }
 
     // 画像のサイズが変わった場合
-    float newWidth = (float)imgWidth * zoom;
-    float newHeight = (float)imgHeight * zoom;
+    newWidth = (float)imgWidth * zoom;
+    newHeight = (float)imgHeight * zoom;
     float minLimit = 50.0f;
 
     // 画像は50x50以下じゃ駄目
