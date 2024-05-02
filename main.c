@@ -18,6 +18,9 @@ int screenHeight;
 int init = 0;
 SDL_Rect renderQuad;
 
+// ズーム
+float zoom = 1.0f;
+
 const char* sofname = "mivfx";
 const char* version = "0.5.0";
 
@@ -64,6 +67,59 @@ void windowevent(SDL_Event e) {
     } else if (e.key.keysym.sym == SDLK_a) {
       // GIFアニメーションの停止・続き、0.6.0から追加する予定
     }
+  } else if (e.type == SDL_MOUSEWHEEL) {
+    // TODO: ノートパソコンでおかしくなる
+    float zoomSpeed = 0.1f;
+    if (e.wheel.y > 0) {
+      zoom += zoomSpeed;
+    } else if (e.wheel.y < 0) {
+      zoom -= zoomSpeed;
+    }
+
+    if (zoom < 0.1f) {
+      zoom = 0.1f;
+    }
+
+    // 画像のサイズが変わった場合
+    float newWidth = (float)imgWidth * zoom;
+    float newHeight = (float)imgHeight * zoom;
+
+    float minLimit = 50.0f;
+    float maxLimitW = (screenWidth - 20);
+    float maxLimitH = (screenHeight - 20);
+
+    // 画像は50x50以下じゃ駄目
+    if (newWidth < minLimit && newWidth < minLimit) {
+      newWidth = minLimit;
+      newHeight = minLimit;
+    } else if (newWidth < minLimit && newHeight >= minLimit) {
+      newWidth = minLimit;
+    } else if (newWidth >= minLimit && newHeight < minLimit) {
+      newHeight = minLimit;
+    }
+
+    // 大きすぎの場合もふざけんな
+    // TODO: 大きすぎの場合は、ズームインを辞める様にして
+    if (newWidth >= maxLimitW && newHeight >= maxLimitH) {
+      newHeight = (screenHeight * aspectRatio) - 20;
+      newWidth = (screenWidth * aspectRatio) - 20;
+    } else if (newWidth >= maxLimitW && newHeight < maxLimitH) {
+      newWidth = (screenWidth * aspectRatio) - 20;
+    } else if (newWidth < maxLimitW && newHeight >= maxLimitH) {
+      newHeight = (screenHeight * aspectRatio) - 20;
+    }
+
+    // テキスチャーのレンダーリングサイズの設定
+    SDL_RenderClear(renderer);
+
+    renderQuad.w = (int)newWidth;
+    renderQuad.h = (int)newHeight;
+    renderQuad.x = (windowWidth - renderQuad.w) / 2;
+    renderQuad.y = (windowHeight - renderQuad.h) / 2;
+
+    SDL_RenderClear(renderer);
+    SDL_RenderCopy(renderer, texture, NULL, &renderQuad);
+    SDL_RenderPresent(renderer);
   } else if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_RESIZED) {
     // ウィンドウのサイズが変わった場合
     int newWidth = e.window.data1;
