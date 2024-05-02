@@ -21,6 +21,9 @@ SDL_Rect renderQuad;
 // マウス
 int mouseX, mouseY, drag = 0;
 
+// ズーム
+float zoom = 1.0f;
+
 const char* sofname = "mivfx";
 const char* version = "0.5.0";
 
@@ -44,8 +47,6 @@ bool dlfile(const char* url, const char* filename) {
   );
   // Pixivも結構面倒くさい
   if (
-      strstr("s.pixiv.net", url) == 0 ||
-      strstr("i.pixiv.net", url) == 0 ||
       strstr("s.pximg.net", url) == 0 ||
       strstr("i.pximg.net", url) == 0
   ) {
@@ -99,6 +100,45 @@ void windowevent(SDL_Event e) {
       SDL_RenderCopy(renderer, texture, NULL, &renderQuad);
       SDL_RenderPresent(renderer);
     }
+  } else if (e.type == SDL_MOUSEWHEEL) {
+    // TODO: ノートパソコンでおかしくなる
+    float zoomSpeed = 0.1f;
+    if (e.wheel.y > 0) {
+      zoom += zoomSpeed;
+    } else if (e.wheel.y < 0) {
+      zoom -= zoomSpeed;
+    }
+
+    if (zoom < 0.1f) {
+      zoom = 0.1f;
+    }
+
+    // 画像のサイズが変わった場合
+    float newWidth = (float)imgWidth * zoom;
+    float newHeight = (float)imgHeight * zoom;
+    float minLimit = 50.0f;
+
+    // 画像は50x50以下じゃ駄目
+    if (newWidth < minLimit || newHeight < minLimit) {
+      newWidth = minLimit;
+      newHeight = minLimit;
+    } else if (newWidth < minLimit & newHeight >= minLimit) {
+      newWidth = minLimit;
+    } else if (newWidth >= minLimit && newHeight < minLimit) {
+      newHeight = minLimit;
+    }
+
+    // テキスチャーのレンダーリングサイズの設定
+    SDL_RenderClear(renderer);
+
+    renderQuad.w = (int)newWidth;
+    renderQuad.h = (int)newHeight;
+    renderQuad.x = (windowWidth - renderQuad.w) / 2;
+    renderQuad.y = (windowHeight - renderQuad.h) / 2;
+
+    SDL_RenderClear(renderer);
+    SDL_RenderCopy(renderer, texture, NULL, &renderQuad);
+    SDL_RenderPresent(renderer);
   } else if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_RESIZED) {
     // ウィンドウのサイズが変わった場合
     int newWidth = e.window.data1;
@@ -148,18 +188,20 @@ void windowevent(SDL_Event e) {
         (imgWidth >= (screenWidth - 100)) &&
         imgHeight >= (screenHeight - 100)
     ) {
-      imgWidth -= (screenWidth * 3);
-      imgHeight -= (screenHeight * 3);
+      imgWidth = (screenWidth - 100);
+      imgHeight = (screenHeight - 100);
     } else if (
         (imgWidth >= (screenWidth - 100)) &&
         imgHeight <= (screenHeight - 100)
     ) {
-      imgWidth -= (screenWidth * 3);
+      imgWidth = (screenWidth - 100);
+      imgHeight = (imgWidth * aspectRatio);
     } else if (
         (imgWidth <= (screenWidth - 100)) &&
         imgHeight >= (screenHeight - 100)
     ) {
-      imgHeight -= (screenHeight * 3);
+      imgHeight = (screenHeight - 100);
+      imgWidth = (imgHeight * aspectRatio);
     }
 
     SDL_RenderCopy(renderer, texture, NULL, &renderQuad);
