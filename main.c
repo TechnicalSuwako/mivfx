@@ -15,6 +15,8 @@ int imgWidth;
 int imgHeight;
 int screenWidth;
 int screenHeight;
+int init = 0;
+SDL_Rect renderQuad;
 
 const char* sofname = "mivfx";
 const char* version = "0.5.0";
@@ -50,6 +52,10 @@ bool dlfile(const char* url, const char* filename) {
 }
 
 void windowevent(SDL_Event e) {
+  int windowWidth, windowHeight;
+  SDL_GetWindowSize(window, &windowWidth, &windowHeight);
+  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+
   if (e.type == SDL_QUIT) {
     quit = true;
   } else if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_RESIZED) {
@@ -85,15 +91,38 @@ void windowevent(SDL_Event e) {
     SDL_RenderCopy(renderer, texture, NULL, &renderQuad);
     SDL_SetWindowSize(window, scaledWidth, scaledHeight);
   } else if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_EXPOSED) {
-    // 再描画が必要な場合
-
-    // 画面の更新
+    SDL_Rect renderQuad = { imgWidth, imgHeight, imgWidth, imgHeight };
     SDL_RenderClear(renderer);
 
-    // テキスチャーの表示
-    SDL_RenderCopy(renderer, texture, NULL, NULL);
+    renderQuad.x = (windowWidth - renderQuad.w) / 2;
+    renderQuad.y = (windowHeight - renderQuad.h) / 2;
 
-    // 画面の更新
+    if (init == 0) {
+      renderQuad.w = imgWidth;
+      renderQuad.h = imgHeight;
+    }
+
+    if (
+        (imgWidth >= (screenWidth - 100)) &&
+        imgHeight >= (screenHeight - 100)
+    ) {
+      imgWidth -= (screenWidth * 3);
+      imgHeight -= (screenHeight * 3);
+    } else if (
+        (imgWidth >= (screenWidth - 100)) &&
+        imgHeight <= (screenHeight - 100)
+    ) {
+      imgWidth -= (screenWidth * 3);
+    } else if (
+        (imgWidth <= (screenWidth - 100)) &&
+        imgHeight >= (screenHeight - 100)
+    ) {
+      imgHeight -= (screenHeight * 3);
+    }
+
+    SDL_RenderCopy(renderer, texture, NULL, &renderQuad);
+    if (init == 0) SDL_SetWindowSize(window, imgWidth + 20, imgHeight + 20);
+    init = 1;
     SDL_RenderPresent(renderer);
   }
 }
