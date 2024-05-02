@@ -1,4 +1,5 @@
 UNAME_S!=uname -s
+UNAME_M!=uname -m
 
 NAME!=cat main.c | grep "const char\* sofname" | awk '{print $$5}' | \
 	sed "s/\"//g" | sed "s/;//"
@@ -44,6 +45,18 @@ dist: clean
 		*.c ${NAME}-${VERSION}
 	tar zcfv release/src/${NAME}-${VERSION}.tar.gz ${NAME}-${VERSION}
 	rm -rf ${NAME}-${VERSION}
+
+release-openbsd:
+	mkdir -p release/bin
+	${CC} ${CFLAGS} -o release/bin/${NAME}-${VERSION}-openbsd-${UNAME_M} ${FILES}\
+		${LDFLAGS}\
+		-static -lSDL2 -lSDL2_image -lcurl -lc -lm -liconv -lsndio -lsamplerate -lX11\
+		-lxcb -lXext -lXcursor -lXrender -lXfixes -lXi -lXrandr -lXss -lusbhid -lpthread\
+		-ljxl -ljxl_cms -llcms2 -lhwy -lc++ -lc++abi -lbrotlidec\
+		-lbrotlicommon -lbrotlienc -lyuv -ltiff -lz -ljpeg -llzma -lzstd -lavif\
+		-ldav1d -laom -lsharpyuv -lwebpdemux -lwebp -lnghttp3 -lngtcp2_crypto_quictls\
+		-lngtcp2 -lssl -lcrypto -lnghttp2 -lXau -lXdmcp
+	strip release/bin/${NAME}-${VERSION}-openbsd-${UNAME_M}
 
 install:
 	mkdir -p ${DESTDIR}${PREFIX}/bin
