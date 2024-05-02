@@ -92,21 +92,22 @@ void windowevent(SDL_Event e) {
     if (scaledWidth >= (screenWidth-20)) scaledWidth = screenWidth-20;
     if (scaledHeight >= (screenHeight-20)) scaledHeight = screenHeight-20;
 
-    // テキスチャーのれんダーリングサイズの設定
-    SDL_Rect renderQuad = { imgWidth, imgHeight, scaledWidth, scaledHeight };
-    SDL_RenderCopy(renderer, texture, NULL, &renderQuad);
+    // テキスチャーのレンダーリングサイズの設定
+    renderQuad.x = imgWidth;
+    renderQuad.y = imgHeight;
+    renderQuad.w = scaledWidth;
+    renderQuad.h = scaledHeight;
+
     SDL_SetWindowSize(window, scaledWidth, scaledHeight);
+    SDL_RenderCopy(renderer, texture, NULL, &renderQuad);
   } else if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_EXPOSED) {
     SDL_Rect renderQuad = { imgWidth, imgHeight, imgWidth, imgHeight };
     SDL_RenderClear(renderer);
 
+    renderQuad.w = (windowWidth - 20);
+    renderQuad.h = (windowHeight - 20);
     renderQuad.x = (windowWidth - renderQuad.w) / 2;
     renderQuad.y = (windowHeight - renderQuad.h) / 2;
-
-    if (init == 0) {
-      renderQuad.w = imgWidth;
-      renderQuad.h = imgHeight;
-    }
 
     if (
         (imgWidth >= (screenWidth - 100)) &&
