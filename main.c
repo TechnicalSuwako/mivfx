@@ -17,6 +17,13 @@ int screenWidth;
 int screenHeight;
 int init = 0;
 SDL_Rect renderQuad;
+float newWidth;
+float newHeight;
+
+// マウス
+int mouseX = 10;
+int mouseY = 10;
+int drag = 0;
 
 // ズーム
 float zoom = 1.0f;
@@ -74,8 +81,33 @@ void windowevent(SDL_Event e) {
     } else if (e.key.keysym.sym == SDLK_a) {
       // GIFアニメーションの停止・続き、0.6.0から追加する予定
     }
+  } else if (e.type == SDL_MOUSEBUTTONDOWN) {
+    if (e.button.button == SDL_BUTTON_LEFT) {
+      drag = 1;
+      SDL_GetMouseState(&mouseX, &mouseY);
+    }
+  } else if (e.type == SDL_MOUSEBUTTONUP) {
+    if (e.button.button == SDL_BUTTON_LEFT) {
+      drag = 0;
+    }
+  } else if (e.type == SDL_MOUSEMOTION) {
+    if (drag) {
+      int newMouseX, newMouseY;
+      SDL_GetMouseState(&newMouseX, &newMouseY);
+      SDL_RenderClear(renderer);
+
+      if (newWidth == 0.0f) renderQuad.w = imgWidth;
+      else renderQuad.w = (int)newWidth;
+      if (newHeight == 0.0f) renderQuad.h = imgHeight;
+      else renderQuad.h = (int)newHeight;
+      renderQuad.x = newMouseX - (renderQuad.w / 2);
+      renderQuad.y = newMouseY - (renderQuad.h / 2);
+
+      SDL_RenderClear(renderer);
+      SDL_RenderCopy(renderer, texture, NULL, &renderQuad);
+      SDL_RenderPresent(renderer);
+    }
   } else if (e.type == SDL_MOUSEWHEEL) {
-    // TODO: ノートパソコンでおかしくなる
     float zoomSpeed = 0.1f;
     if (e.wheel.y > 0) {
       zoom += zoomSpeed;
@@ -88,8 +120,8 @@ void windowevent(SDL_Event e) {
     }
 
     // 画像のサイズが変わった場合
-    float newWidth = (float)imgWidth * zoom;
-    float newHeight = (float)imgHeight * zoom;
+    newWidth = (float)imgWidth * zoom;
+    newHeight = (float)imgHeight * zoom;
     float minLimit = 50.0f;
 
     // 画像は50x50以下じゃ駄目
