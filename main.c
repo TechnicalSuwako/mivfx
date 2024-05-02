@@ -58,6 +58,12 @@ void windowevent(SDL_Event e) {
 
   if (e.type == SDL_QUIT) {
     quit = true;
+  } else if (e.type == SDL_KEYDOWN) {
+    if (e.key.keysym.sym == SDLK_q) {
+      quit = true;
+    } else if (e.key.keysym.sym == SDLK_a) {
+      // GIFアニメーションの停止・続き、0.6.0から追加する予定
+    }
   } else if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_RESIZED) {
     // ウィンドウのサイズが変わった場合
     int newWidth = e.window.data1;
