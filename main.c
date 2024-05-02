@@ -61,7 +61,7 @@ void windowevent(SDL_Event e) {
     float newAspectRatio = (float)newWidth / newHeight;
     int scaledWidth, scaledHeight;
     if (newAspectRatio != aspectRatio) {
-    // 画像よりウィンドウの方が広い場合
+      // 画像よりウィンドウの方が広い場合
       scaledHeight = newHeight;
       scaledWidth = (int)(scaledHeight * aspectRatio);
     } else {
@@ -78,7 +78,7 @@ void windowevent(SDL_Event e) {
 
     // 大きすぎの場合もふざけんな
     if (scaledWidth >= (screenWidth-20)) scaledWidth = screenWidth-20;
-    if (scaledHeight >= (screenHeight-20)) scaledWidth = screenHeight-20;
+    if (scaledHeight >= (screenHeight-20)) scaledHeight = screenHeight-20;
 
     // テキスチャーのれんダーリングサイズの設定
     SDL_Rect renderQuad = { imgWidth, imgHeight, scaledWidth, scaledHeight };
