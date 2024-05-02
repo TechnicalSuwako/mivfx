@@ -41,8 +41,6 @@ bool dlfile(const char* url, const char* filename) {
   );
   // Pixivも結構面倒くさい
   if (
-      strstr("s.pixiv.net", url) == 0 ||
-      strstr("i.pixiv.net", url) == 0 ||
       strstr("s.pximg.net", url) == 0 ||
       strstr("i.pximg.net", url) == 0
   ) {
