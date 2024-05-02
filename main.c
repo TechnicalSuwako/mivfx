@@ -128,7 +128,7 @@ void windowevent(SDL_Event e) {
     if (newWidth < minLimit || newHeight < minLimit) {
       newWidth = minLimit;
       newHeight = minLimit;
-    } else if (newWidth < minLimit & newHeight >= minLimit) {
+    } else if (newWidth < minLimit && newHeight >= minLimit) {
       newWidth = minLimit;
     } else if (newWidth >= minLimit && newHeight < minLimit) {
       newHeight = minLimit;
