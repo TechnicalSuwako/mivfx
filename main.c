@@ -18,6 +18,9 @@ int screenHeight;
 int init = 0;
 SDL_Rect renderQuad;
 
+// マウス
+int mouseX, mouseY, drag = 0;
+
 const char* sofname = "mivfx";
 const char* version = "0.5.0";
 
@@ -72,6 +75,29 @@ void windowevent(SDL_Event e) {
       quit = true;
     } else if (e.key.keysym.sym == SDLK_a) {
       // GIFアニメーションの停止・続き、0.6.0から追加する予定
+    }
+  } else if (e.type == SDL_MOUSEBUTTONDOWN) {
+    if (e.button.button == SDL_BUTTON_LEFT) {
+      drag = 1;
+      SDL_GetMouseState(&mouseX, &mouseY);
+    }
+  } else if (e.type == SDL_MOUSEBUTTONUP) {
+    if (e.button.button == SDL_BUTTON_LEFT) {
+      drag = 0;
+    }
+  } else if (e.type == SDL_MOUSEMOTION) {
+    if (drag) {
+      // TODO: 画像サイズを変わらないと、画面が黒くになる
+      int newMouseX, newMouseY;
+      SDL_GetMouseState(&newMouseX, &newMouseY);
+      SDL_RenderClear(renderer);
+
+      renderQuad.x = newMouseX - (renderQuad.w / 2);
+      renderQuad.y = newMouseY - (renderQuad.h / 2);
+
+      SDL_RenderClear(renderer);
+      SDL_RenderCopy(renderer, texture, NULL, &renderQuad);
+      SDL_RenderPresent(renderer);
     }
   } else if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_RESIZED) {
     // ウィンドウのサイズが変わった場合
