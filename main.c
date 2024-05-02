@@ -31,6 +31,12 @@ bool dlfile(const char* url, const char* filename) {
   }
 
   curl_easy_setopt(curl, CURLOPT_URL, url);
+  // Clownflareは面倒くさいわね・・・
+  curl_easy_setopt(
+    curl,
+    CURLOPT_USERAGENT,
+    "Mozilla/5.0 (Windows NT 10.0; rv:102.0) Gecko/20100101 Firefox/102.0"
+  );
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
   CURLcode res = curl_easy_perform(curl);
   fclose(file);
