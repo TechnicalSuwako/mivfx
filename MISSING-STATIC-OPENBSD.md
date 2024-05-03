@@ -24,7 +24,7 @@ $ doas cmake --install build
 $ doas chown -R $(whoami):$(whoami) /usr/ports
 $ cd /usr/ports/graphics/libavif
 $ make clean
-$ sed -i 's/libyuv=ON/libyuv=OFF/" Makefile
+$ sed -i 's/libyuv=ON/libyuv=OFF/' Makefile
 $ sed -i 's/SHARED/STATIC/' Makefile
 $ sed -i '31i\
 		-DBUILD_SHARED_LIBS=OFF \\
