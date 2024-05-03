@@ -219,13 +219,8 @@ void windowevent(SDL_Event e) {
 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
-    printf("使用方法： %s <画像ファイル>\n", sofname);
+    printf("%s-%s\nusage: %s <file or url>\n", sofname, version, sofname);
     return 1;
-  }
-
-  if (strncmp(argv[1], "-v", 2) == 0) {
-    printf("%s-%s\n", sofname, version);
-    return 0;
   }
 
   // SDL2とSDL2_imageの初期設定

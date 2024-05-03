@@ -39,10 +39,9 @@ all:
 clean:
 	rm -f ${NAME}
 
-dist: clean
+dist:
 	mkdir -p ${NAME}-${VERSION} release/src
-	cp -R LICENSE.txt Makefile README.md CHANGELOG.md ${NAME}.desktop\
-		*.c ${NAME}-${VERSION}
+	cp -R LICENSE.txt Makefile *.md ${NAME}.desktop ${NAME}.1 *.c ${NAME}-${VERSION}
 	tar zcfv release/src/${NAME}-${VERSION}.tar.gz ${NAME}-${VERSION}
 	rm -rf ${NAME}-${VERSION}
 
@@ -61,11 +60,13 @@ release-openbsd:
 install:
 	mkdir -p ${DESTDIR}${PREFIX}/bin
 	cp -f ${NAME} ${DESTDIR}${PREFIX}/bin
+	sed "s/VERSION/${VERSION}/g" < ${NAME}.1 > ${DESTDIR}${MANPREFIX}/man1/${NAME}.1
 	cp -f ${NAME}.desktop ${DESTDIR}${PREFIX}/share/applications
 	chmod 755 ${DESTDIR}${PREFIX}/bin/${NAME}
 
 uninstall:
-	rm -f ${DESTDIR}${PREFIX}/bin/${NAME}
 	rm -f ${DESTDIR}${PREFIX}/share/applications/${NAME}.desktop
+	rm -f ${DESTDIR}${PREFIX}/man1/${NAME}.1
+	rm -f ${DESTDIR}${PREFIX}/bin/${NAME}
 
 .PHONY: all clean install uninstall
