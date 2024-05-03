@@ -9,27 +9,22 @@ PREFIX=/usr/local
 
 .if ${UNAME_S} == "Linux"
 PREFIX=/usr
-.elif ${UNAME_S} == "NetBSD"
-PREFIX=/usr/pkg
 .endif
 
 CC=cc
 FILES=main.c
-CFLAGS=-Wall -Wextra -g -I${PREFIX}/include
+CFLAGS=-Wall -Wextra -g -I/usr/include -I/usr/local/include
 LIBS=-lSDL2 -lSDL2_image -lcurl
-LDFLAGS=-L${PREFIX}/lib
+LDFLAGS=-L/usr/lib -L/usr/local/lib
 MANPREFIX=${PREFIX}/share/man
 
 .if ${UNAME_S} == "OpenBSD"
 MANPREFIX=${PREFIX}/man
-LDFLAGS+=-L/usr/lib -L/usr/X11R6/lib
-CFLAGS+=-I/usr/include -I/usr/X11R6/include
-.elif ${UNAME_S} == "FreeBSD"
-LDFLAGS+=-L/usr/lib
-CFLAGS+=-I/usr/include
+LDFLAGS+=-L/usr/X11R6/lib
+CFLAGS+=-I/usr/X11R6/include
 .elif ${UNAME_S} == "NetBSD"
-LDFLAGS+=-L/usr/lib -L/usr/local/lib -L/usr/X11R7/lib
-CFLAGS+=-I/usr/include -I/usr/local/include -I/usr/X11R7/include
+LDFLAGS+=-L/usr/X11R7/lib -L/usr/pkg/lib
+CFLAGS+=-I/usr/X11R7/include -I/usr/pkg/include
 .endif
 
 all:

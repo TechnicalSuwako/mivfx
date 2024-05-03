@@ -1,3 +1,8 @@
+# 0.6.0
+* MakefileとREADME.mdファイルの更新
+* NetBSDは「/usr/pkg」→「/usr/local」
+* スペルミスの修正
+
 # 0.5.0
 * .desktopファイルの追加
 * CDNを回避する様に

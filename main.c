@@ -29,7 +29,7 @@ int drag = 0;
 float zoom = 1.0f;
 
 const char* sofname = "mivfx";
-const char* version = "0.5.0";
+const char* version = "0.6.0";
 
 bool dlfile(const char* url, const char* filename) {
   CURL* curl = curl_easy_init();
