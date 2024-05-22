@@ -75,16 +75,12 @@ void rotateWindow(int w, int h) {
   if (angle >= 360.0f) angle = 0.0f;
   else if (angle <= -360.0f) angle = 0.0f;
 
-  int newWindowWidth = h;
-  int newWindowHeight = w;
-  renderQuad.x = 10;
-  renderQuad.y = 10;
-  renderQuad.w = h;
-  renderQuad.h = w;
-
-  SDL_SetWindowSize(window, newWindowWidth + 20, newWindowHeight + 20);
+  imgWidth = h;
+  imgHeight = w;
+  SDL_Rect renderQuad = { 10, 10, h, w };
 
   SDL_RenderClear(renderer);
+  SDL_SetWindowSize(window, imgWidth + 20, imgHeight + 20);
   SDL_RenderCopyEx(renderer, texture, NULL, &renderQuad, angle, NULL, SDL_FLIP_NONE);
   SDL_RenderPresent(renderer);
 }
@@ -103,10 +99,10 @@ void windowevent(SDL_Event e) {
       // GIFアニメーションの停止・続き、0.6.0から追加する予定
     } else if (e.key.keysym.sym == SDLK_r) {
       angle -= 90.0f;
-      rotateWindow(windowWidth, windowHeight);
+      rotateWindow(imgWidth, imgHeight);
     } else if (e.key.keysym.sym == SDLK_t) {
       angle += 90.0f;
-      rotateWindow(windowWidth, windowHeight);
+      rotateWindow(imgWidth, imgHeight);
     }
   } else if (e.type == SDL_MOUSEBUTTONDOWN) {
     if (e.button.button == SDL_BUTTON_LEFT) {
