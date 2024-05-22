@@ -1,3 +1,4 @@
+#include "SDL2/SDL_render.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <stdio.h>
@@ -27,6 +28,9 @@ int drag = 0;
 
 // ズーム
 float zoom = 1.0f;
+
+// 回転
+float angle = 0.0f;
 
 const char* sofname = "mivfx";
 const char* version = "0.6.0";
@@ -68,6 +72,22 @@ bool dlfile(const char* url, const char* filename) {
   return true;
 }
 
+void rotateWindow(int w, int h) {
+  if (angle >= 360.0f) angle = 0.0f;
+  else if (angle <= -360.0f) angle = 0.0f;
+
+  int newWindowWidth = h - 20;
+  int newWindowHeight = w - 20;
+  renderQuad.w = h;
+  renderQuad.h = w;
+
+  SDL_SetWindowSize(window, newWindowWidth + 20, newWindowHeight + 20);
+
+  SDL_RenderClear(renderer);
+  SDL_RenderCopyEx(renderer, texture, NULL, &renderQuad, angle, NULL, SDL_FLIP_NONE);
+  SDL_RenderPresent(renderer);
+}
+
 void windowevent(SDL_Event e) {
   int windowWidth, windowHeight;
   SDL_GetWindowSize(window, &windowWidth, &windowHeight);
@@ -80,6 +100,12 @@ void windowevent(SDL_Event e) {
       quit = true;
     } else if (e.key.keysym.sym == SDLK_a) {
       // GIFアニメーションの停止・続き、0.6.0から追加する予定
+    } else if (e.key.keysym.sym == SDLK_r) {
+      angle -= 90.0f;
+      rotateWindow(windowWidth, windowHeight);
+    } else if (e.key.keysym.sym == SDLK_t) {
+      angle += 90.0f;
+      rotateWindow(windowWidth, windowHeight);
     }
   } else if (e.type == SDL_MOUSEBUTTONDOWN) {
     if (e.button.button == SDL_BUTTON_LEFT) {
@@ -182,6 +208,9 @@ void windowevent(SDL_Event e) {
     SDL_SetWindowSize(window, scaledWidth, scaledHeight);
     SDL_RenderCopy(renderer, texture, NULL, &renderQuad);
   } else if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_EXPOSED) {
+    if (init == 1) return;
+    init = 1;
+
     SDL_Rect renderQuad = { imgWidth, imgHeight, imgWidth, imgHeight };
     SDL_RenderClear(renderer);
 
@@ -211,15 +240,18 @@ void windowevent(SDL_Event e) {
     }
 
     SDL_RenderCopy(renderer, texture, NULL, &renderQuad);
-    if (init == 0) SDL_SetWindowSize(window, imgWidth + 20, imgHeight + 20);
-    init = 1;
+    SDL_SetWindowSize(window, imgWidth + 20, imgHeight + 20);
     SDL_RenderPresent(renderer);
   }
 }
 
+void usage() {
+  printf("%s-%s\nusage: %s [file or url]\n", sofname, version, sofname);
+}
+
 int main(int argc, char* argv[]) {
   if (argc < 2) {
-    printf("%s-%s\nusage: %s <file or url>\n", sofname, version, sofname);
+    usage();
     return 1;
   }
 
