@@ -53,7 +53,9 @@ release-openbsd:
 	strip release/bin/${NAME}-${VERSION}-openbsd-${UNAME_M}
 
 install:
-	mkdir -p ${DESTDIR}${PREFIX}/bin
+	mkdir -p ${DESTDIR}${PREFIX}/bin\
+		${DESTDIR}${MANPREFIX}/man1\
+		${DESTDIR}${PREFIX}/share/applications
 	cp -f ${NAME} ${DESTDIR}${PREFIX}/bin
 	sed "s/VERSION/${VERSION}/g" < ${NAME}.1 > ${DESTDIR}${MANPREFIX}/man1/${NAME}.1
 	cp -f ${NAME}.desktop ${DESTDIR}${PREFIX}/share/applications
