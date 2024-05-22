@@ -1,4 +1,3 @@
-#include "SDL2/SDL_render.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <stdio.h>
@@ -76,8 +75,10 @@ void rotateWindow(int w, int h) {
   if (angle >= 360.0f) angle = 0.0f;
   else if (angle <= -360.0f) angle = 0.0f;
 
-  int newWindowWidth = h - 20;
-  int newWindowHeight = w - 20;
+  int newWindowWidth = h;
+  int newWindowHeight = w;
+  renderQuad.x = 10;
+  renderQuad.y = 10;
   renderQuad.w = h;
   renderQuad.h = w;
 
@@ -172,6 +173,7 @@ void windowevent(SDL_Event e) {
     SDL_RenderCopy(renderer, texture, NULL, &renderQuad);
     SDL_RenderPresent(renderer);
   } else if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_RESIZED) {
+    SDL_RenderClear(renderer);
     // ウィンドウのサイズが変わった場合
     int newWidth = e.window.data1;
     int newHeight = e.window.data2;
@@ -200,24 +202,23 @@ void windowevent(SDL_Event e) {
     if (scaledHeight >= (screenHeight-20)) scaledHeight = screenHeight-20;
 
     // テキスチャーのレンダーリングサイズの設定
-    renderQuad.x = imgWidth;
-    renderQuad.y = imgHeight;
-    renderQuad.w = scaledWidth;
-    renderQuad.h = scaledHeight;
+    SDL_Rect renderQuad = { 10, 10, scaledWidth, scaledHeight };
 
-    SDL_SetWindowSize(window, scaledWidth, scaledHeight);
+    SDL_SetWindowSize(window, scaledWidth + 20, scaledHeight + 20);
     SDL_RenderCopy(renderer, texture, NULL, &renderQuad);
+    SDL_RenderPresent(renderer);
+  } else if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_MOVED) {
+    SDL_Rect renderQuad = { 10, 10, imgWidth, imgHeight };
+
+    SDL_RenderClear(renderer);
+    SDL_RenderCopy(renderer, texture, NULL, &renderQuad);
+    SDL_SetWindowSize(window, imgWidth + 20, imgHeight + 20);
+    SDL_RenderPresent(renderer);
   } else if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_EXPOSED) {
     if (init == 1) return;
     init = 1;
 
-    SDL_Rect renderQuad = { imgWidth, imgHeight, imgWidth, imgHeight };
     SDL_RenderClear(renderer);
-
-    renderQuad.w = (windowWidth - 20);
-    renderQuad.h = (windowHeight - 20);
-    renderQuad.x = (windowWidth - renderQuad.w) / 2;
-    renderQuad.y = (windowHeight - renderQuad.h) / 2;
 
     if (
         (imgWidth >= (screenWidth - 100)) &&
@@ -238,6 +239,8 @@ void windowevent(SDL_Event e) {
       imgHeight = (screenHeight - 100);
       imgWidth = (imgHeight * aspectRatio);
     }
+
+    SDL_Rect renderQuad = { 10, 10, imgWidth, imgHeight };
 
     SDL_RenderCopy(renderer, texture, NULL, &renderQuad);
     SDL_SetWindowSize(window, imgWidth + 20, imgHeight + 20);
