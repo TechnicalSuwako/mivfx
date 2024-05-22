@@ -31,6 +31,10 @@ float zoom = 1.0f;
 // 回転
 float angle = 0.0f;
 
+// 反転
+bool flippedH = false;
+bool flippedV = false;
+
 const char* sofname = "mivfx";
 const char* version = "0.6.0";
 
@@ -77,7 +81,7 @@ void rotateWindow(int w, int h) {
 
   imgWidth = h;
   imgHeight = w;
-  SDL_Rect renderQuad = { 10, 10, h, w };
+  SDL_Rect renderQuad = { 10, 10, imgWidth, imgHeight };
 
   SDL_RenderClear(renderer);
   SDL_SetWindowSize(window, imgWidth + 20, imgHeight + 20);
@@ -95,14 +99,50 @@ void windowevent(SDL_Event e) {
   } else if (e.type == SDL_KEYDOWN) {
     if (e.key.keysym.sym == SDLK_q) {
       quit = true;
-    } else if (e.key.keysym.sym == SDLK_a) {
-      // GIFアニメーションの停止・続き、0.6.0から追加する予定
+    } else if (e.key.keysym.sym == SDLK_e) {
+      // GIFアニメーションの停止・続き、0.7.0から追加する予定
     } else if (e.key.keysym.sym == SDLK_r) {
       angle -= 90.0f;
       rotateWindow(imgWidth, imgHeight);
     } else if (e.key.keysym.sym == SDLK_t) {
       angle += 90.0f;
       rotateWindow(imgWidth, imgHeight);
+    } else if (e.key.keysym.sym == SDLK_y) {
+      SDL_RenderClear(renderer);
+      SDL_Rect renderQuad = { 10, 10, imgWidth, imgHeight };
+
+      SDL_SetWindowSize(window, imgWidth + 20, imgHeight + 20);
+      SDL_RenderCopyEx(
+          renderer,
+          texture,
+          NULL,
+          &renderQuad,
+          angle,
+          NULL,
+          !flippedV ? SDL_FLIP_VERTICAL : SDL_FLIP_NONE
+      );
+      flippedV = !flippedV;
+      SDL_RenderPresent(renderer);
+    } else if (e.key.keysym.sym == SDLK_u) {
+      SDL_RenderClear(renderer);
+      SDL_Rect renderQuad = { 10, 10, imgWidth, imgHeight };
+
+      SDL_SetWindowSize(window, imgWidth + 20, imgHeight + 20);
+      SDL_RenderCopyEx(
+          renderer,
+          texture,
+          NULL,
+          &renderQuad,
+          angle,
+          NULL,
+          !flippedH ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE
+      );
+      flippedH = !flippedH;
+      SDL_RenderPresent(renderer);
+    } else if (e.key.keysym.sym == SDLK_o) {
+      // 画像をダウンロードする（リモート画像のみ）
+    } else if (e.key.keysym.sym == SDLK_p) {
+      // 画像をrsync|sftp|http postで使って共有する、0.7.0から追加する予定
     }
   } else if (e.type == SDL_MOUSEBUTTONDOWN) {
     if (e.button.button == SDL_BUTTON_LEFT) {
