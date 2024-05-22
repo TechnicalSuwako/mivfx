@@ -2,6 +2,7 @@
 * MakefileとREADME.mdファイルの更新
 * NetBSDは「/usr/pkg」→「/usr/local」
 * スペルミスの修正
+* manpageでコントロールの説明の追加
 
 # 0.5.0
 * .desktopファイルの追加

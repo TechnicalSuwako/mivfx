@@ -3,10 +3,40 @@
 mivfx - minimalist image view for x
 .SH SYNOPSIS
 .B mivfx
-<\fI\,file or url\fR>
+[\fI\,file\fR|\fI\,url\fR]
 .SH DESCRIPTION
 .PP
 ミニマリストな画像ビューアーです。
+.SH KEYBINDING
+.TP
+\fB\,Q\fR
+終了
+.TP
+\fB\,R\fR
+画像を-90°で回転する
+.TP
+\fB\,T\fR
+画像を+90°で回転する
+.TP
+\fB\,マウスでスクロール\fR
+ズームインやズームアウト
+.TP
+\fB\,マウスで移動\fR
+画像の移動
+.SH EXAMPLES
+\&...
+
+$ mivfx ~/画像/image.png
+.ED
+.br
+ローカルな画像を開く
+
+\&...
+
+$ mivfx https://076.moe/image.png
+.ED
+.br
+リモートサーバから画像を開く
 .SH AUTHORS
 .PP
 テクニカル諏訪子
