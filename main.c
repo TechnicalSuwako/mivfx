@@ -11,6 +11,8 @@ SDL_Renderer* renderer = NULL;
 SDL_Texture* texture = NULL;
 bool quit = false;
 float aspectRatio;
+int imgX = 10;
+int imgY = 10;
 int imgWidth;
 int imgHeight;
 int screenWidth;
@@ -90,14 +92,16 @@ void RenderCopy(SDL_Rect renderQuad) {
 void rotateWindow(int w, int h) {
   if (angle >= 360.0f) angle = 0.0f;
   else if (angle <= -360.0f) angle = 0.0f;
+  else if (angle == 270.0f) angle = -90.0f;
+  else if (angle == -180.0f) angle = 180.0f;
 
   imgWidth = h;
   imgHeight = w;
   aspectRatio = (float)imgWidth / imgHeight;
-  SDL_Rect renderQuad = { 10, 10, imgWidth, imgHeight };
+  SDL_Rect renderQuad = { imgX, imgY, imgWidth, imgHeight };
 
   SDL_RenderClear(renderer);
-  SDL_SetWindowSize(window, imgWidth + 20, imgHeight + 20);
+  SDL_SetWindowSize(window, imgWidth + (imgX * 2), imgHeight + (imgY * 2));
   RenderCopy(renderQuad);
   SDL_RenderPresent(renderer);
 }
@@ -122,17 +126,17 @@ void windowevent(SDL_Event e) {
       rotateWindow(imgWidth, imgHeight);
     } else if (e.key.keysym.sym == SDLK_y) {
       SDL_RenderClear(renderer);
-      SDL_Rect renderQuad = { 10, 10, imgWidth, imgHeight };
+      SDL_Rect renderQuad = { imgX, imgY, imgWidth, imgHeight };
 
-      SDL_SetWindowSize(window, imgWidth + 20, imgHeight + 20);
+      SDL_SetWindowSize(window, imgWidth + (imgX * 2), imgHeight + (imgY * 2));
       RenderCopy(renderQuad);
       flippedV = !flippedV;
       SDL_RenderPresent(renderer);
     } else if (e.key.keysym.sym == SDLK_u) {
       SDL_RenderClear(renderer);
-      SDL_Rect renderQuad = { 10, 10, imgWidth, imgHeight };
+      SDL_Rect renderQuad = { imgX, imgY, imgWidth, imgHeight };
 
-      SDL_SetWindowSize(window, imgWidth + 20, imgHeight + 20);
+      SDL_SetWindowSize(window, imgWidth + (imgX * 2), imgHeight + (imgY * 2));
       RenderCopy(renderQuad);
       flippedH = !flippedH;
       SDL_RenderPresent(renderer);
@@ -156,18 +160,20 @@ void windowevent(SDL_Event e) {
       SDL_GetMouseState(&newMouseX, &newMouseY);
       SDL_RenderClear(renderer);
 
-      if (newWidth == 0.0f) renderQuad.w = imgWidth;
-      else renderQuad.w = (int)newWidth;
-      if (newHeight == 0.0f) renderQuad.h = imgHeight;
-      else renderQuad.h = (int)newHeight;
-      renderQuad.x = newMouseX - (renderQuad.w / 2);
-      renderQuad.y = newMouseY - (renderQuad.h / 2);
+      if (newWidth != 0.0f) imgWidth = (newWidth);
+      if (newHeight != 0.0f) imgHeight = (newHeight);
+      imgX = newMouseX - (imgWidth / 2);
+      imgY = newMouseY - (imgHeight / 2);
+      SDL_Rect renderQuad = { imgX, imgY, imgWidth, imgHeight };
 
       SDL_RenderClear(renderer);
       RenderCopy(renderQuad);
       SDL_RenderPresent(renderer);
     }
   } else if (e.type == SDL_MOUSEWHEEL) {
+    int curWidth = imgWidth;
+    int curHeight = imgHeight;
+
     float zoomSpeed = 0.1f;
     if (e.wheel.y > 0) {
       zoom += zoomSpeed;
@@ -185,22 +191,23 @@ void windowevent(SDL_Event e) {
     float minLimit = 50.0f;
 
     // 画像は50x50以下じゃ駄目
-    if (newWidth < minLimit || newHeight < minLimit) {
+    if (newWidth < minLimit) {
       newWidth = minLimit;
-      newHeight = minLimit;
-    } else if (newWidth < minLimit && newHeight >= minLimit) {
-      newWidth = minLimit;
-    } else if (newWidth >= minLimit && newHeight < minLimit) {
+      newHeight = curHeight;
+    } else if (newHeight < minLimit) {
+      printf("%d\n", curWidth);
+      newWidth = curWidth;
       newHeight = minLimit;
     }
 
     // テキスチャーのレンダーリングサイズの設定
     SDL_RenderClear(renderer);
 
-    renderQuad.w = (int)newWidth;
-    renderQuad.h = (int)newHeight;
-    renderQuad.x = (windowWidth - renderQuad.w) / 2;
-    renderQuad.y = (windowHeight - renderQuad.h) / 2;
+    imgWidth = (int)newWidth;
+    imgHeight = (int)newHeight;
+    imgX = (windowWidth - imgWidth) / 2;
+    imgY = (windowHeight - imgHeight) / 2;
+    SDL_Rect renderQuad = { imgX, imgY, imgWidth, imgHeight };
 
     SDL_RenderClear(renderer);
     RenderCopy(renderQuad);
@@ -217,7 +224,6 @@ void windowevent(SDL_Event e) {
     int scaledWidth, scaledHeight;
 
     if (newAspectRatio != aspectRatio) {
-      printf("New: %.2f, old: %.2f\n", newAspectRatio, aspectRatio);
       // 画像よりウィンドウの方が広い場合
       scaledHeight = angle == 90 || angle == -90 ? newWidth : newHeight;
       scaledHeight = newHeight;
@@ -242,17 +248,17 @@ void windowevent(SDL_Event e) {
     imgHeight = scaledHeight;
 
     // テキスチャーのレンダーリングサイズの設定
-    SDL_Rect renderQuad = { 10, 10, imgWidth, imgHeight };
+    SDL_Rect renderQuad = { imgX, imgY, imgWidth, imgHeight };
 
-    SDL_SetWindowSize(window, imgWidth + 20, imgHeight + 20);
+    SDL_SetWindowSize(window, imgWidth + (imgX * 2), imgHeight + (imgY * 2));
     RenderCopy(renderQuad);
     SDL_RenderPresent(renderer);
   } else if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_MOVED) {
-    SDL_Rect renderQuad = { 10, 10, imgWidth, imgHeight };
+    SDL_Rect renderQuad = { imgX, imgY, imgWidth, imgHeight };
 
     SDL_RenderClear(renderer);
     RenderCopy(renderQuad);
-    SDL_SetWindowSize(window, imgWidth + 20, imgHeight + 20);
+    SDL_SetWindowSize(window, imgWidth + (imgX * 2), imgHeight + (imgY * 2));
     SDL_RenderPresent(renderer);
   } else if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_EXPOSED) {
     if (init == 1) return;
@@ -280,10 +286,10 @@ void windowevent(SDL_Event e) {
       imgWidth = (imgHeight * aspectRatio);
     }
 
-    SDL_Rect renderQuad = { 10, 10, imgWidth, imgHeight };
+    SDL_Rect renderQuad = { imgX, imgY, imgWidth, imgHeight };
 
     RenderCopy(renderQuad);
-    SDL_SetWindowSize(window, imgWidth + 20, imgHeight + 20);
+    SDL_SetWindowSize(window, imgWidth + (imgX * 2), imgHeight + (imgY * 2));
     SDL_RenderPresent(renderer);
   }
 }
