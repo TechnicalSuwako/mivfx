@@ -75,17 +75,30 @@ bool dlfile(const char* url, const char* filename) {
   return true;
 }
 
+void RenderCopy(SDL_Rect renderQuad) {
+  SDL_RenderCopyEx(
+    renderer,
+    texture,
+    NULL,
+    &renderQuad,
+    angle,
+    NULL,
+    flippedV ? SDL_FLIP_VERTICAL : (flippedH ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE)
+  );
+}
+
 void rotateWindow(int w, int h) {
   if (angle >= 360.0f) angle = 0.0f;
   else if (angle <= -360.0f) angle = 0.0f;
 
   imgWidth = h;
   imgHeight = w;
+  aspectRatio = (float)imgWidth / imgHeight;
   SDL_Rect renderQuad = { 10, 10, imgWidth, imgHeight };
 
   SDL_RenderClear(renderer);
   SDL_SetWindowSize(window, imgWidth + 20, imgHeight + 20);
-  SDL_RenderCopyEx(renderer, texture, NULL, &renderQuad, angle, NULL, SDL_FLIP_NONE);
+  RenderCopy(renderQuad);
   SDL_RenderPresent(renderer);
 }
 
@@ -112,15 +125,7 @@ void windowevent(SDL_Event e) {
       SDL_Rect renderQuad = { 10, 10, imgWidth, imgHeight };
 
       SDL_SetWindowSize(window, imgWidth + 20, imgHeight + 20);
-      SDL_RenderCopyEx(
-          renderer,
-          texture,
-          NULL,
-          &renderQuad,
-          angle,
-          NULL,
-          !flippedV ? SDL_FLIP_VERTICAL : SDL_FLIP_NONE
-      );
+      RenderCopy(renderQuad);
       flippedV = !flippedV;
       SDL_RenderPresent(renderer);
     } else if (e.key.keysym.sym == SDLK_u) {
@@ -128,15 +133,7 @@ void windowevent(SDL_Event e) {
       SDL_Rect renderQuad = { 10, 10, imgWidth, imgHeight };
 
       SDL_SetWindowSize(window, imgWidth + 20, imgHeight + 20);
-      SDL_RenderCopyEx(
-          renderer,
-          texture,
-          NULL,
-          &renderQuad,
-          angle,
-          NULL,
-          !flippedH ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE
-      );
+      RenderCopy(renderQuad);
       flippedH = !flippedH;
       SDL_RenderPresent(renderer);
     } else if (e.key.keysym.sym == SDLK_o) {
@@ -167,7 +164,7 @@ void windowevent(SDL_Event e) {
       renderQuad.y = newMouseY - (renderQuad.h / 2);
 
       SDL_RenderClear(renderer);
-      SDL_RenderCopy(renderer, texture, NULL, &renderQuad);
+      RenderCopy(renderQuad);
       SDL_RenderPresent(renderer);
     }
   } else if (e.type == SDL_MOUSEWHEEL) {
@@ -206,10 +203,11 @@ void windowevent(SDL_Event e) {
     renderQuad.y = (windowHeight - renderQuad.h) / 2;
 
     SDL_RenderClear(renderer);
-    SDL_RenderCopy(renderer, texture, NULL, &renderQuad);
+    RenderCopy(renderQuad);
     SDL_RenderPresent(renderer);
   } else if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_RESIZED) {
     SDL_RenderClear(renderer);
+
     // ウィンドウのサイズが変わった場合
     int newWidth = e.window.data1;
     int newHeight = e.window.data2;
@@ -217,14 +215,17 @@ void windowevent(SDL_Event e) {
     // 縦横比を変わらずに新しい大きさの算数
     float newAspectRatio = (float)newWidth / newHeight;
     int scaledWidth, scaledHeight;
+
     if (newAspectRatio != aspectRatio) {
+      printf("New: %.2f, old: %.2f\n", newAspectRatio, aspectRatio);
       // 画像よりウィンドウの方が広い場合
+      scaledHeight = angle == 90 || angle == -90 ? newWidth : newHeight;
       scaledHeight = newHeight;
       scaledWidth = (int)(scaledHeight * aspectRatio);
     } else {
       // 画像よりウィンドウの方が高い場合
-      scaledWidth = newWidth;
-      scaledHeight = newHeight;
+      scaledWidth = angle == 90 || angle == -90 ? newHeight : newWidth;
+      scaledHeight = angle == 90 || angle == -90 ? newWidth : newHeight;
     }
 
     // 画像は50x50以下じゃ駄目
@@ -237,17 +238,20 @@ void windowevent(SDL_Event e) {
     if (scaledWidth >= (screenWidth-20)) scaledWidth = screenWidth-20;
     if (scaledHeight >= (screenHeight-20)) scaledHeight = screenHeight-20;
 
-    // テキスチャーのレンダーリングサイズの設定
-    SDL_Rect renderQuad = { 10, 10, scaledWidth, scaledHeight };
+    imgWidth = scaledWidth;
+    imgHeight = scaledHeight;
 
-    SDL_SetWindowSize(window, scaledWidth + 20, scaledHeight + 20);
-    SDL_RenderCopy(renderer, texture, NULL, &renderQuad);
+    // テキスチャーのレンダーリングサイズの設定
+    SDL_Rect renderQuad = { 10, 10, imgWidth, imgHeight };
+
+    SDL_SetWindowSize(window, imgWidth + 20, imgHeight + 20);
+    RenderCopy(renderQuad);
     SDL_RenderPresent(renderer);
   } else if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_MOVED) {
     SDL_Rect renderQuad = { 10, 10, imgWidth, imgHeight };
 
     SDL_RenderClear(renderer);
-    SDL_RenderCopy(renderer, texture, NULL, &renderQuad);
+    RenderCopy(renderQuad);
     SDL_SetWindowSize(window, imgWidth + 20, imgHeight + 20);
     SDL_RenderPresent(renderer);
   } else if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_EXPOSED) {
@@ -278,7 +282,7 @@ void windowevent(SDL_Event e) {
 
     SDL_Rect renderQuad = { 10, 10, imgWidth, imgHeight };
 
-    SDL_RenderCopy(renderer, texture, NULL, &renderQuad);
+    RenderCopy(renderQuad);
     SDL_SetWindowSize(window, imgWidth + 20, imgHeight + 20);
     SDL_RenderPresent(renderer);
   }
