@@ -3,13 +3,16 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <curl/curl.h>
+#include <string.h>
+#include <unistd.h>
 
 #define DELAY_MS 50
 
-SDL_Window* window = NULL;
-SDL_Renderer* renderer = NULL;
-SDL_Texture* texture = NULL;
+SDL_Window *window = NULL;
+SDL_Renderer *renderer = NULL;
+SDL_Texture *texture = NULL;
 bool quit = false;
+bool hasdownloaded = false; // DDoSを避ける為
 float aspectRatio;
 int imgX = 10;
 int imgY = 10;
@@ -18,6 +21,8 @@ int imgHeight;
 int screenWidth;
 int screenHeight;
 int init = 0;
+char *imgfilename;
+char *imgurl;
 SDL_Rect renderQuad;
 float newWidth;
 float newHeight;
@@ -37,16 +42,16 @@ float angle = 0.0f;
 bool flippedH = false;
 bool flippedV = false;
 
-const char* sofname = "mivfx";
-const char* version = "0.6.0";
+const char *sofname = "mivfx";
+const char *version = "0.6.0";
 
-bool dlfile(const char* url, const char* filename) {
-  CURL* curl = curl_easy_init();
+bool dlfile(const char *url, const char *filename) {
+  CURL *curl = curl_easy_init();
   if (!curl) {
     return false;
   }
 
-  FILE* file = fopen(filename, "wb");
+  FILE *file = fopen(filename, "wb");
   if (!file) {
     return false;
   }
@@ -75,6 +80,40 @@ bool dlfile(const char* url, const char* filename) {
   }
 
   return true;
+}
+
+char *fromurl(char *imgfile, char *dir) {
+  char s[512], *p, *tokens[128];
+  char *last;
+  int i = 0;
+  imgurl = imgfile;
+
+  snprintf(s, sizeof(s), "%s", imgfile);
+
+  for (
+      (p = strtok_r(s, "/", &last));
+      p;
+      (p = strtok_r(NULL, "/", &last))
+  ) {
+    if (i < 127) tokens[i++] = p;
+  }
+
+  tokens[i] = NULL;
+  imgfilename = tokens[i - 1];
+
+  char *res;
+
+  res = (char *)malloc(1024);
+  if (res == NULL) {
+    return NULL;
+  }
+
+  snprintf(res, 1024, "%s/%s", dir, imgfilename);
+  if (!dlfile(imgfile, res)) {
+    printf("画像をダウンロードに失敗。URL: %s\n", imgfile);
+    return NULL;
+  }
+  return res;
 }
 
 void RenderCopy(SDL_Rect renderQuad) {
@@ -141,7 +180,14 @@ void windowevent(SDL_Event e) {
       flippedH = !flippedH;
       SDL_RenderPresent(renderer);
     } else if (e.key.keysym.sym == SDLK_o) {
-      // 画像をダウンロードする（リモート画像のみ）
+      bool isurl = strncmp(imgurl, "http://",  7) == 0 ||
+                   strncmp(imgurl, "https://", 8) == 0;
+      if (isurl && !hasdownloaded) {
+        char path[1024];
+        getcwd(path, 1024);
+        if (fromurl(imgurl, path) != NULL) puts("ダウンロード済み");
+        hasdownloaded = true;
+      }
     } else if (e.key.keysym.sym == SDLK_p) {
       // 画像をrsync|sftp|http postで使って共有する、0.7.0から追加する予定
     }
@@ -298,7 +344,7 @@ void usage() {
   printf("%s-%s\nusage: %s [file or url]\n", sofname, version, sofname);
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   if (argc < 2) {
     usage();
     return 1;
@@ -316,25 +362,20 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  const char* imgfile = argv[1];
+  const char *imgfile = argv[1];
 
   // URLの場合、仮にダウンロードして
   bool isurl = strncmp(imgfile, "http://",  7) == 0 ||
                strncmp(imgfile, "https://", 8) == 0;
-  char tmpname[] = "/tmp/netimg.png";
-  if (isurl) {
-    if (!dlfile(imgfile, tmpname)) {
-      printf("画像をダウンロードに失敗。URL: %s\n", imgfile);
-      SDL_DestroyRenderer(renderer);
-      SDL_DestroyWindow(window);
-      SDL_Quit();
-      return 1;
-    }
-    imgfile = tmpname;
+  imgfile = isurl ? fromurl(argv[1], "/tmp") : argv[1];
+  if (imgfile == NULL) {
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
   }
 
   // 画像の読込
-  SDL_Surface* imgsurface = IMG_Load(imgfile);
+  SDL_Surface *imgsurface = IMG_Load(imgfile);
   if (imgsurface == NULL) {
     printf("画像の読込に失敗：%s\n", IMG_GetError());
     SDL_DestroyRenderer(renderer);
@@ -405,9 +446,6 @@ int main(int argc, char* argv[]) {
   }
 
   // 掃除
-  if (isurl) {
-    remove(tmpname);
-  }
   SDL_DestroyTexture(texture);
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
