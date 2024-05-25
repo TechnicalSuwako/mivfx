@@ -43,8 +43,7 @@ dist:
 release-openbsd:
 	mkdir -p release/bin
 	${CC} ${CFLAGS} -o release/bin/${NAME}-${VERSION}-openbsd-${UNAME_M} ${FILES}\
-		${LDFLAGS}\
-		-static -lSDL2 -lSDL2_image -lcurl -lc -lm -liconv -lsndio -lsamplerate -lX11\
+		-static ${LDFLAGS} -lc -lm -liconv -lsndio -lsamplerate -lX11\
 		-lxcb -lXext -lXcursor -lXrender -lXfixes -lXi -lXrandr -lXss -lusbhid -lpthread\
 		-ljxl -ljxl_cms -llcms2 -lhwy -lc++ -lc++abi -lbrotlidec\
 		-lbrotlicommon -lbrotlienc -lyuv -ltiff -lz -ljpeg -llzma -lzstd -lavif\
