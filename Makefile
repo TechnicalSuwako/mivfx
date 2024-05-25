@@ -43,13 +43,23 @@ dist:
 release-openbsd:
 	mkdir -p release/bin
 	${CC} ${CFLAGS} -o release/bin/${NAME}-${VERSION}-openbsd-${UNAME_M} ${FILES}\
-		-static ${LDFLAGS} -lc -lm -liconv -lsndio -lsamplerate -lX11\
+		${LDFLAGS} -static ${LIBS} -lc -lm -liconv -lsndio -lsamplerate -lX11\
 		-lxcb -lXext -lXcursor -lXrender -lXfixes -lXi -lXrandr -lXss -lusbhid -lpthread\
 		-ljxl -ljxl_cms -llcms2 -lhwy -lc++ -lc++abi -lbrotlidec\
 		-lbrotlicommon -lbrotlienc -lyuv -ltiff -lz -ljpeg -llzma -lzstd -lavif\
 		-ldav1d -laom -lsharpyuv -lwebpdemux -lwebp -lnghttp3 -lngtcp2_crypto_quictls\
 		-lngtcp2 -lssl -lcrypto -lnghttp2 -lXau -lXdmcp
 	strip release/bin/${NAME}-${VERSION}-openbsd-${UNAME_M}
+
+release-netbsd:
+	mkdir -p release/bin
+	${CC} ${CFLAGS} -o release/bin/${NAME}-${VERSION}-netbsd-${UNAME_M} ${FILES}\
+		${LDFLAGS} -static ${LIBS} -lc -lm -lossaudio -lX11 -lxcb -lXau -lXdmcp -lgcc\
+		-lXext -lXcursor -lXrender -lXi -lXfixes -lXrandr -lXss -ldrm -lpci -lgbm -lglapi\
+		-lstdc++ -lexpat -lusbhid -lusb-1.0 -lpthread -lnghttp2 -lidn2 -lunistring\
+		-lintl -lgssapi -lkrb5 -lhx509 -lssl -lcrypto -lcrypt -lasn1 -lcom_err -lroken\
+		-lutil -lwind -lheimbase -lheimntlm -lz
+	strip release/bin/${NAME}-${VERSION}-netbsd-${UNAME_M}
 
 install:
 	mkdir -p ${DESTDIR}${PREFIX}/bin\
